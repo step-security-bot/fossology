@@ -13,6 +13,7 @@ use Fossology\Lib\Auth\Auth;
 use Fossology\Lib\BusinessRules\ClearingDecisionFilter;
 use Fossology\Lib\BusinessRules\LicenseMap;
 use Fossology\Lib\Dao\AgentDao;
+use Fossology\Lib\Dao\CompatibilityDao;
 use Fossology\Lib\Dao\ClearingDao;
 use Fossology\Lib\Dao\LicenseDao;
 use Fossology\Lib\Dao\UploadDao;
@@ -40,6 +41,8 @@ class AjaxExplorer extends DefaultPlugin
   private $uploadtree_tablename = "";
   /** @var UploadDao */
   private $uploadDao;
+  /** @var CompatibilityDao */
+  private $compatibilityDao;
   /** @var LicenseDao */
   private $licenseDao;
   /** @var ClearingDao */
@@ -76,6 +79,7 @@ class AjaxExplorer extends DefaultPlugin
     ));
 
     $this->uploadDao = $this->getObject('dao.upload');
+    $this->compatibilityDao = $this->getObject('dao.compatibility');
     $this->licenseDao = $this->getObject('dao.license');
     $this->clearingDao = $this->getObject('dao.clearing');
     $this->agentDao = $this->getObject('dao.agent');
@@ -196,6 +200,7 @@ class AjaxExplorer extends DefaultPlugin
       $options[UploadTreeProxy::OPT_SKIP_ALREADY_CLEARED] = true;
     }
 
+    $options[UploadTreeProxy::OPT_USER_ID] = Auth::getUserId();
     $descendantView = new UploadTreeProxy($uploadId, $options, $itemTreeBounds->getUploadTreeTableName(), 'uberItems');
 
     $vars['iTotalDisplayRecords'] = $descendantView->count();
@@ -242,6 +247,7 @@ class AjaxExplorer extends DefaultPlugin
     $allDecisions = $this->clearingDao->getFileClearingsFolder($itemTreeBounds, $groupId, $isFlat);
     $editedMappedLicenses = $this->clearingFilter->filterCurrentClearingDecisions($allDecisions);
 
+    $userId = Auth::getUserId();
     $pfileLicenses = $this->updateTheFindingsAndDecisions($selectedScanners,
       $isFlat, $groupId, $editedMappedLicenses, $itemTreeBounds, $nameRange);
 
@@ -282,6 +288,7 @@ class AjaxExplorer extends DefaultPlugin
     $fileId = $child['pfile_fk'];
     $childUploadTreeId = $child['uploadtree_pk'];
     $linkUri = '';
+    $userId = Auth::getUserId();
     if (!empty($fileId) && !empty($ModLicView)) {
       $linkUri = Traceback_uri();
       $linkUri .= "?mod=view-license&upload=$uploadId&item=$childUploadTreeId";
@@ -351,7 +358,13 @@ class AjaxExplorer extends DefaultPlugin
             }
             $agentEntries[] = $agentEntry;
           }
-          $licenseEntries[] = $shortName . " [" . implode("][", $agentEntries) . "]";
+          //call that function----file_id,upload_id,shortname
+          $compatible = $this->compatibilityDao->getCompatibilityForFile($childItemTreeBounds, $shortName);
+          if (!$compatible) {
+            $licenseEntries[] = "<b><font color='red'>$shortName</font></b>" . " [" . implode("][", $agentEntries) . "]";
+          } else {
+            $licenseEntries[] = $shortName . " [" . implode("][", $agentEntries) . "]";
+          }
         }
       }
 
@@ -422,6 +435,7 @@ class AjaxExplorer extends DefaultPlugin
    *          key and id as value)
    * @param boolean $isFlat Is the flat view required?
    * @param integer $groupId The user group
+   * @param integer $userId  The current user's id
    * @param[in,out] array $editedMappedLicenses Map of decisions
    * @param ItemTreeBounds $itemTreeBounds The current item tree bound
    * @param array $nameRange The name range for current view
@@ -429,7 +443,7 @@ class AjaxExplorer extends DefaultPlugin
    *         `[pfile_id][license_id][agent_name] = license_findings`
    */
   private function updateTheFindingsAndDecisions($agentIds, $isFlat, $groupId,
-    &$editedMappedLicenses, $itemTreeBounds, $nameRange = array())
+    $userId, &$editedMappedLicenses, $itemTreeBounds, $nameRange = array())
   {
     /**
      * ***** File Listing ***********
@@ -454,7 +468,9 @@ class AjaxExplorer extends DefaultPlugin
           UploadTreeProxy::OPT_SKIP_THESE => UploadTreeProxy::OPT_SKIP_ALREADY_CLEARED,
           UploadTreeProxy::OPT_ITEM_FILTER => "AND (lft BETWEEN " .
           $itemTreeBounds->getLeft() . " AND " . $itemTreeBounds->getRight() . ")",
-          UploadTreeProxy::OPT_GROUP_ID => $groupId
+          UploadTreeProxy::OPT_GROUP_ID => $groupId,
+          UploadTreeProxy::OPT_USER_ID => $userId,
+          UploadTreeProxy::OPT_ONLY_MAIN_LICENSE => true
         ), $itemTreeBounds->getUploadTreeTableName(),
         $viewName = 'already_cleared_uploadtree' . $itemTreeBounds->getUploadId());
 
@@ -469,7 +485,9 @@ class AjaxExplorer extends DefaultPlugin
           UploadTreeProxy::OPT_SKIP_THESE => "noLicense",
           UploadTreeProxy::OPT_ITEM_FILTER => "AND (lft BETWEEN " .
           $itemTreeBounds->getLeft() . " AND " . $itemTreeBounds->getRight() . ")",
-          UploadTreeProxy::OPT_GROUP_ID => $groupId
+          UploadTreeProxy::OPT_GROUP_ID => $groupId,
+          UploadTreeProxy::OPT_USER_ID => $userId,
+          UploadTreeProxy::OPT_ONLY_MAIN_LICENSE => true
         ), $itemTreeBounds->getUploadTreeTableName(),
         $viewName = 'no_license_uploadtree' . $itemTreeBounds->getUploadId());
       $this->noLicenseUploadTreeView->materialize();

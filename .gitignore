@@ -62,6 +62,7 @@ src/cli/fossupload_status
 src/cli/exportLicenseRefUsingSPDX
 src/clixml/agent/version.php
 src/clixml/agent/clixml
+src/compatibility/agent/compatibility
 src/copyright/agent/ipra
 src/copyright/agent/copyright
 src/copyright/agent/keyword

@@ -516,7 +516,7 @@ function Populate_sysconfig()
   $SourceDownloadRightsPrompt = _('Access rights required to download source code');
   $SourceDownloadRightsDesc = _('Choose which access level will be required for user to be able to download source code.');
   $valueArray[$variable] = array("'$variable'", "'$perm_write'", "'$SourceDownloadRightsPrompt'",
-  strval(CONFIG_TYPE_DROP), "'DOWNLOAD'", "1", "'$SourceDownloadRightsDesc'", "null", "'Administrator{{$perm_admin}}|Read_Write{{$perm_write}}'");
+    strval(CONFIG_TYPE_DROP), "'DOWNLOAD'", "1", "'$SourceDownloadRightsDesc'", "null", "'Administrator{{$perm_admin}}|Read_Write{{$perm_write}}'");
 
   $variable = "UserDescReadOnly";
   $prompt = _('Make account details read-only');
@@ -524,6 +524,13 @@ function Populate_sysconfig()
   $valueArray[$variable] = array("'$variable'", "false", "'$prompt'",
     strval(CONFIG_TYPE_BOOL), "'USER_READ_ONLY'", "1", "'$desc'",
     "'check_boolean'", "null");
+
+  $variable = "LicenseTypes";
+  $licenseTypeTitle = _("License Title");
+  $contextValue = "Permissive, Strong Copyleft, Weak Copyleft";
+  $licenseTypeDesc = _("add  comma (,) separated different license types");
+  $valueArray[$variable] = array("'$variable'", "'$contextValue'", "'$licenseTypeTitle'",
+    strval(CONFIG_TYPE_TEXT), "'License'", "1", "'$licenseTypeDesc'", "null", "null");
 
   /* SoftwareHeritage agent config */
   $variable = "SwhURL";
