@@ -1,0 +1,21 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /src/nomos/agent_tests/testdata/NomosTestfiles/ISC
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /src/nomos/agent_tests/testdata/NomosTestfiles/WTFPL
+    schedule:
+      interval: daily

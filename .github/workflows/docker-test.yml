@@ -7,6 +7,9 @@ name: Docker test
 on:
   pull_request
 
+permissions:
+  contents: read
+
 jobs:
   docker-test:
     runs-on: ubuntu-latest

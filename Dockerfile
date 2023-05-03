@@ -9,7 +9,7 @@
 #
 # Description: Docker container image recipe
 
-FROM debian:bullseye-slim as builder
+FROM debian:bullseye-slim@sha256:f4da3f9b18fc242b739807a0fb3e77747f644f2fb3f67f4403fafce2286b431a as builder
 LABEL org.opencontainers.image.authors="Fossology <fossology@fossology.org>"
 LABEL org.opencontainers.image.source="https://github.com/fossology/fossology"
 LABEL org.opencontainers.image.vendor="FOSSology"
@@ -56,7 +56,7 @@ RUN cmake -DCMAKE_BUILD_TYPE=MinSizeRel -S. -B./build -G Ninja \
  && cmake --build ./build --parallel \
  && cmake --install build
 
-FROM debian:bullseye-slim
+FROM debian:bullseye-slim@sha256:f4da3f9b18fc242b739807a0fb3e77747f644f2fb3f67f4403fafce2286b431a
 
 LABEL org.opencontainers.image.authors="Fossology <fossology@fossology.org>"
 LABEL org.opencontainers.image.url="https://fossology.org"
